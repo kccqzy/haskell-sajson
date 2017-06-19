@@ -11,7 +11,6 @@ extern "C" {
 #endif
 
 struct sajson_document *sajson_parse_single_allocation(char *bytes, size_t length);
-struct sajson_document *sajson_parse_dynamic_allocation(char *bytes, size_t length);
 void sajson_free_document(struct sajson_document *doc);
 int sajson_has_error(struct sajson_document *doc);
 size_t sajson_get_error_line(struct sajson_document *doc);

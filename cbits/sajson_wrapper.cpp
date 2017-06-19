@@ -20,11 +20,6 @@ sajson_document* sajson_parse_single_allocation(char* bytes, size_t length) {
     return wrap(new(std::nothrow) sajson::document(std::move(doc)));
 }
 
-sajson_document* sajson_parse_dynamic_allocation(char* bytes, size_t length) {
-    auto doc = sajson::parse(sajson::dynamic_allocation(), sajson::mutable_string_view(length, bytes));
-    return wrap(new(std::nothrow) sajson::document(std::move(doc)));
-}
-
 void sajson_free_document(sajson_document* doc) {
     delete unwrap(doc);
 }
