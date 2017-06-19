@@ -15,9 +15,18 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Lib
+  exposed-modules:     Data.Sajson
   build-depends:       base >= 4.7 && < 5
+                     , bytestring
+                     , aeson
+                     , vector
+                     , scientific
+                     , unordered-containers
   default-language:    Haskell2010
+  include-dirs:        cbits
+  c-sources:           cbits/sajson_wrapper.cpp
+  cc-options:          -Wall -Werror -std=c++14
+  ghc-options:         -Wall -Werror
 
 test-suite sajson-test
   type:                exitcode-stdio-1.0
@@ -25,9 +34,12 @@ test-suite sajson-test
   main-is:             Spec.hs
   build-depends:       base
                      , sajson
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+                     , hspec
+                     , bytestring
+  ghc-options:         -Wall -Werror -threaded -rtsopts
   default-language:    Haskell2010
+  extra-libraries:     stdc++
 
 source-repository head
   type:     git
-  location: https://github.com/githubuser/sajson
+  location: https://github./sajson
