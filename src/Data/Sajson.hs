@@ -9,7 +9,6 @@ import Control.Monad
 import Data.Aeson
 import Data.Bits
 import qualified Data.ByteString as B
-import Data.Foldable
 import qualified Data.HashMap.Strict as HM
 import Data.Scientific
 import qualified Data.Text as T
@@ -109,10 +108,9 @@ constructHaskellValue 6 payload buf = do -- TYPE_ARRAY
   (Array <$>) . V.generateM (fromIntegral len) $ \i -> makeValue payload (1 + i) buf
 constructHaskellValue 7 payload buf = do -- TYPE_OBJECT
   len <- peekElemOff payload 0
-  Object <$> foldrM go HM.empty [1 .. len] -- do not use [0..len-1]: integer overflow
-  where go i' hm = do
-          let i = i' - 1
-          key <- makeString (payload `plusPtr` fromIntegral (8 * (1 + i * 3))) buf
-          val <- makeValue payload (fromIntegral (3 + i * 3)) buf
+  Object <$> V.foldM' go HM.empty (V.enumFromN 0 (fromIntegral len))
+  where go hm i = do
+          key <- makeString (payload `plusPtr` (8 * (1 + i * 3))) buf
+          val <- makeValue payload (3 + i * 3) buf
           pure $ HM.insert key val hm
 constructHaskellValue vt _ _ = throwIO (ErrorCall $ "Data.Sajson internal error: unexpected sajson type tag: " ++ show vt)
