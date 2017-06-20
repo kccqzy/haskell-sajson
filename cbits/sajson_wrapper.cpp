@@ -15,13 +15,17 @@ static inline sajson_document* wrap(sajson::document* doc) {
     return static_cast<sajson_document*>(doc);
 }
 
-sajson_document* sajson_parse_single_allocation(char* str, size_t length, size_t *buffer) {
+size_t sajson_document_sizeof(void) {
+    return sizeof(sajson::document);
+}
+
+sajson_document* sajson_parse_single_allocation(char* str, size_t length, size_t *buffer, char *rv) {
     auto doc = sajson::parse(sajson::single_allocation(buffer, length), sajson::mutable_string_view(length, str));
-    return wrap(new(std::nothrow) sajson::document(std::move(doc)));
+    return wrap(new(rv) sajson::document(std::move(doc)));
 }
 
 void sajson_free_document(sajson_document* doc) {
-    delete unwrap(doc);
+    unwrap(doc)->~document();
 }
 
 int sajson_has_error(sajson_document* doc) {

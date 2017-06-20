@@ -10,7 +10,8 @@ struct sajson_document;
 extern "C" {
 #endif
 
-struct sajson_document *sajson_parse_single_allocation(char *str, size_t length, size_t *buffer);
+size_t sajson_document_sizeof(void);
+struct sajson_document *sajson_parse_single_allocation(char *str, size_t length, size_t *buffer, char *rv);
 void sajson_free_document(struct sajson_document *doc);
 int sajson_has_error(struct sajson_document *doc);
 size_t sajson_get_error_line(struct sajson_document *doc);
