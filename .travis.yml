@@ -6,6 +6,10 @@ sudo: false
 # Use Ubuntu Trusty, which has g++4.8 which supports C++11
 dist: trusty
 
+# No emails
+notifications:
+  email: false
+
 # Do not choose a language; we provide our own build tools.
 language: generic
 
