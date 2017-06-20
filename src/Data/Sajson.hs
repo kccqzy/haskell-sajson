@@ -17,6 +17,7 @@ import qualified Data.Vector as V
 import Data.Word
 import Foreign.C.String
 import Foreign.C.Types
+import Foreign.Marshal.Alloc
 import Foreign.Ptr
 import Foreign.Storable
 
@@ -35,7 +36,7 @@ type SajsonValuePayload = Ptr CSize
 type SajsonValueInputMutableView = Ptr CUChar
 
 foreign import ccall unsafe "sajson_wrapper.h sajson_parse_single_allocation"
-  c_sajson_parse_single_allocation :: Ptr CChar -> CSize -> IO (Ptr SajsonDocument)
+  c_sajson_parse_single_allocation :: Ptr CChar -> CSize -> Ptr CSize -> IO (Ptr SajsonDocument)
 
 foreign import ccall unsafe "sajson_wrapper.h sajson_free_document"
   c_sajson_free_document :: Ptr SajsonDocument -> IO ()
@@ -63,7 +64,8 @@ foreign import ccall unsafe "sajson_wrapper.h sajson_get_input"
 
 sajsonParse :: B.ByteString -> IO (Either SajsonParseError Value)
 sajsonParse bs = B.useAsCStringLen bs $ \(ptr, size) ->
-  bracket (c_sajson_parse_single_allocation ptr (fromIntegral size)) c_sajson_free_document $ \ doc -> do
+  allocaBytes (8 * size) $ \buf ->
+  bracket (c_sajson_parse_single_allocation ptr (fromIntegral size) buf) c_sajson_free_document $ \ doc -> do
   hasError <- c_sajson_has_error doc
   case hasError of
     0 -> Right <$> join (constructHaskellValue

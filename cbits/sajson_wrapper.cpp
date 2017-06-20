@@ -15,8 +15,8 @@ static inline sajson_document* wrap(sajson::document* doc) {
     return static_cast<sajson_document*>(doc);
 }
 
-sajson_document* sajson_parse_single_allocation(char* bytes, size_t length) {
-    auto doc = sajson::parse(sajson::single_allocation(), sajson::mutable_string_view(length, bytes));
+sajson_document* sajson_parse_single_allocation(char* str, size_t length, size_t *buffer) {
+    auto doc = sajson::parse(sajson::single_allocation(buffer, length), sajson::mutable_string_view(length, str));
     return wrap(new(std::nothrow) sajson::document(std::move(doc)));
 }
 
