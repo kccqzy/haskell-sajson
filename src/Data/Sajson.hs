@@ -81,10 +81,10 @@ sajsonParse bs = B.useAsCStringLen bs $ \(ptr, size) ->
                    <*> (fromIntegral <$> c_sajson_get_error_column doc)
                    <*> (c_sajson_get_error_message doc >>= peekCString))
 
-makeString :: SajsonValuePayload -> SajsonValueInputMutableView -> IO T.Text
-makeString payload buf = do
-  start <- peekElemOff payload 0
-  end <- peekElemOff payload 1
+makeString :: SajsonValuePayload -> Int -> SajsonValueInputMutableView -> IO T.Text
+makeString payload index buf = do
+  start <- peekElemOff payload index
+  end <- peekElemOff payload (1 + index)
   bs <- B.packCStringLen (buf `plusPtr` fromIntegral start, fromIntegral (end - start))
   pure (TE.decodeUtf8 bs)
 
@@ -109,7 +109,7 @@ constructHaskellValue 3 _ _ = -- TYPE_FALSE
 constructHaskellValue 4 _ _ = -- TYPE_TRUE
   pure (Bool True)
 constructHaskellValue 5 payload buf = -- TYPE_STRING
-  String <$> makeString payload buf
+  String <$> makeString payload 0 buf
 constructHaskellValue 6 payload buf = do -- TYPE_ARRAY
   len <- peekElemOff payload 0
   (Array <$>) . V.generateM (fromIntegral len) $ \i -> makeValue payload (1 + i) buf
@@ -117,7 +117,7 @@ constructHaskellValue 7 payload buf = do -- TYPE_OBJECT
   len <- peekElemOff payload 0
   Object <$> V.foldM' go HM.empty (V.enumFromN 0 (fromIntegral len))
   where go hm i = do
-          key <- makeString (payload `plusPtr` (8 * (1 + i * 3))) buf
+          key <- makeString payload (1 + i * 3) buf
           val <- makeValue payload (3 + i * 3) buf
           pure $ HM.insert key val hm
 constructHaskellValue vt _ _ = throwIO (ErrorCall $ "Data.Sajson internal error: unexpected sajson type tag: " ++ show vt)
