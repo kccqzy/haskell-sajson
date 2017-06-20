@@ -27,7 +27,7 @@ library
   include-dirs:        cbits
   c-sources:           cbits/sajson_wrapper.cpp
   cc-options:          -Wall -Werror -O3 -march=native -std=c++14
-  ghc-options:         -Wall -Werror
+  ghc-options:         -Wall -Werror -O2
 
 test-suite sajson-test
   type:                exitcode-stdio-1.0
