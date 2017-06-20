@@ -1,6 +1,5 @@
 #include "sajson_wrapper.h"
 #include "sajson.hpp"
-#include <new>
 #include <stdlib.h>
 
 // never instantiated, only inherits so static_cast is legal

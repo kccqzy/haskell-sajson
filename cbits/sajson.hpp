@@ -235,36 +235,12 @@ namespace sajson {
         mutable_string_view()
             : length_(0)
             , data(0)
-            , owns(false)
         {}
 
         mutable_string_view(size_t length, char* data)
             : length_(length)
             , data(data)
-            , owns(false)
         {}
-
-        mutable_string_view(const literal& s)
-            : length_(s.length())
-            , owns(true)
-        {
-            data = new char[length_];
-            memcpy(data, s.data(), length_);
-        }
-
-        mutable_string_view(const string& s)
-            : length_(s.length())
-            , owns(true)
-        {
-            data = new char[length_];
-            memcpy(data, s.data(), length_);
-        }
-
-        ~mutable_string_view() {
-            if (uses.count() == 1 && owns) {
-                delete[] data;
-            }
-        }
 
         size_t length() const {
             return length_;
@@ -275,10 +251,8 @@ namespace sajson {
         }
 
     private:
-        refcount uses;
         size_t length_;
         char* data;
-        bool owns;
     };
 
     union integer_storage {
