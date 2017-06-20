@@ -48,3 +48,7 @@ const size_t* sajson_get_root(sajson_document* doc) {
     return unwrap(doc)->_internal_get_root();
 }
 
+const unsigned char* sajson_get_input(sajson_document* doc) {
+    return reinterpret_cast<const unsigned char*>(
+        unwrap(doc)->_internal_get_input().get_data());
+}

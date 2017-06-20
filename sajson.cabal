@@ -18,6 +18,7 @@ library
   exposed-modules:     Data.Sajson
   build-depends:       base >= 4.7 && < 5
                      , bytestring
+                     , text
                      , aeson
                      , vector
                      , scientific
@@ -34,6 +35,8 @@ test-suite sajson-test
   main-is:             Spec.hs
   build-depends:       base
                      , sajson
+                     , aeson
+                     , scientific
                      , hspec
                      , bytestring
   ghc-options:         -Wall -Werror -threaded -rtsopts

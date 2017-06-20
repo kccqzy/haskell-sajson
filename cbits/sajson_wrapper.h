@@ -18,6 +18,7 @@ size_t sajson_get_error_column(struct sajson_document *doc);
 const char *sajson_get_error_message(struct sajson_document *doc);
 uint8_t sajson_get_root_type(struct sajson_document *doc);
 const size_t *sajson_get_root(struct sajson_document *doc);
+const unsigned char* sajson_get_input(struct sajson_document* doc);
 
 #ifdef __cplusplus
 }
