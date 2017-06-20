@@ -14,6 +14,7 @@ import Data.Scientific
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Vector as V
+import Data.Word
 import Foreign.C.String
 import Foreign.C.Types
 import Foreign.Ptr
@@ -29,7 +30,7 @@ data SajsonParseError
   , sajsonParseErrorMessage :: String
   } deriving (Show, Eq)
 
-type SajsonValueType = CUChar
+type SajsonValueType = Word8
 type SajsonValuePayload = Ptr CSize
 type SajsonValueInputMutableView = Ptr CUChar
 
