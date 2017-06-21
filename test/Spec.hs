@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Main where
 
@@ -7,6 +8,7 @@ import qualified Data.ByteString.Lazy.Char8 as BL
 import qualified Data.HashMap.Strict as HM
 import Data.Sajson as S
 import Data.Scientific
+import Data.String
 import qualified Data.Text as T
 import qualified Data.Vector as V
 import Test.Hspec
@@ -57,15 +59,24 @@ main = hspec $ do
       decoded `shouldBe` Right v
       pure True
 
-  describe "eitherDecodeStrict" $ do
-    it "handles incorrect JSON" $
-      S.eitherDecodeStrict "[0" `shouldBe` (Left "Error in sajson parser: line 1 column 3: unexpected end of input" :: Either String [Int])
-    it "handles correct JSON but incorrect schema" $ do
-      let s = "{\"a\":42}"
-      S.eitherDecodeStrict s `shouldBe` (A.eitherDecodeStrict s :: Either String [Int])
+  let testEither :: IsString s => (forall a. FromJSON a => s -> Either String a) -> (forall a. FromJSON a => s -> Either String a) -> String -> Spec
+      testEither f f' n = describe n $ do
+        it "handles incorrect JSON" $
+          f "[0" `shouldBe` (Left "Error in sajson parser: line 1 column 3: unexpected end of input" :: Either String [Int])
+        it "handles correct JSON but incorrect schema" $ do
+          let s = "{\"a\":42}"
+          f s `shouldBe` (f' s :: Either String [Int])
 
-  describe "decodeStrict" $ do
-    it "handles incorrect JSON" $
-      S.decodeStrict "[0" `shouldBe` (Nothing :: Maybe [Int])
-    it "handles correct JSON but incorrect schema" $
-      S.decodeStrict "{\"a\":42}" `shouldBe` (Nothing :: Maybe [Int])
+      testMaybe :: IsString s => (forall a. FromJSON a => s -> Maybe a) -> String -> Spec
+      testMaybe f n = describe n $ do
+        it "handles incorrect JSON" $
+          f "[0" `shouldBe` (Nothing :: Maybe [Int])
+        it "handles correct JSON but incorrect schema" $ do
+          let s = "{\"a\":42}"
+          f s `shouldBe` (Nothing :: Maybe [Int])
+
+  testEither S.eitherDecodeStrict A.eitherDecodeStrict "eitherDecodeStrict"
+  testEither S.eitherDecode A.eitherDecode "eitherDecode"
+
+  testMaybe S.decodeStrict "decodeStrict"
+  testMaybe S.decode "decode"

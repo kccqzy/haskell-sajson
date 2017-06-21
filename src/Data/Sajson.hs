@@ -22,6 +22,8 @@ module Data.Sajson
     -- $replacements
   , eitherDecodeStrict
   , decodeStrict
+  , eitherDecode
+  , decode
   ) where
 
 import Control.Exception
@@ -29,6 +31,7 @@ import Control.Monad
 import Data.Aeson.Types (FromJSON (..), Value (..), parseEither, parseMaybe)
 import Data.Bits
 import qualified Data.ByteString as B
+import qualified Data.ByteString.Lazy as BL
 import qualified Data.HashMap.Strict as HM
 import Data.Scientific
 import qualified Data.Text as T
@@ -198,10 +201,26 @@ describeSajsonParseError (SajsonParseError line col err) = "Error in sajson pars
 -- fails, 'Left' is returned with a 'String' describing the issue.
 eitherDecodeStrict :: FromJSON a => B.ByteString -> Either String a
 eitherDecodeStrict bs = unsafePerformIO $ either (Left . describeSajsonParseError) toDataEither <$> sajsonParse bs
-{-# NOINLINE eitherDecodeStrict #-}
 
 -- | Efficiently deserialize a JSON value from a strict 'B.ByteString'. If this
 -- fails, 'Nothing' is returned.
 decodeStrict :: FromJSON a => B.ByteString -> Maybe a
 decodeStrict bs = unsafePerformIO $ either (pure Nothing) toData <$> sajsonParse bs
-{-# NOINLINE decodeStrict #-}
+
+-- | Deserialize a JSON value from a lazy 'BL.ByteString'. If this fails, 'Left'
+-- is returned with a 'String' describing the issue.
+--
+-- It should be noted that this function first converts the lazy 'BL.ByteString'
+-- into a strict 'B.ByteString'. It does not allow streaming. Therefore it
+-- requires at least twice the total size of the 'BL.ByteString' to be in memory.
+eitherDecode :: FromJSON a => BL.ByteString -> Either String a
+eitherDecode = eitherDecodeStrict . BL.toStrict
+
+-- | Deserialize a JSON value from a lazy 'BL.ByteString'. If this
+-- fails, 'Nothing' is returned.
+--
+-- It should be noted that this function first converts the lazy 'BL.ByteString'
+-- into a strict 'B.ByteString'. It does not allow streaming. Therefore it
+-- requires at least twice the total size of the 'BL.ByteString' to be in memory.
+decode :: FromJSON a => BL.ByteString -> Maybe a
+decode = decodeStrict . BL.toStrict
