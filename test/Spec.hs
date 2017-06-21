@@ -63,3 +63,9 @@ main = hspec $ do
     it "handles correct JSON but incorrect schema" $ do
       let s = "{\"a\":42}"
       S.eitherDecodeStrict s `shouldBe` (A.eitherDecodeStrict s :: Either String [Int])
+
+  describe "decodeStrict" $ do
+    it "handles incorrect JSON" $
+      S.decodeStrict "[0" `shouldBe` (Nothing :: Maybe [Int])
+    it "handles correct JSON but incorrect schema" $
+      S.decodeStrict "{\"a\":42}" `shouldBe` (Nothing :: Maybe [Int])

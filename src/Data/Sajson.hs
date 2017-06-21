@@ -21,11 +21,12 @@ module Data.Sajson
     -- * Drop-in Replacements
     -- $replacements
   , eitherDecodeStrict
+  , decodeStrict
   ) where
 
 import Control.Exception
 import Control.Monad
-import Data.Aeson.Types (FromJSON (..), Value (..), parseEither)
+import Data.Aeson.Types (FromJSON (..), Value (..), parseEither, parseMaybe)
 import Data.Bits
 import qualified Data.ByteString as B
 import qualified Data.HashMap.Strict as HM
@@ -187,6 +188,9 @@ constructHaskellValue vt _ _ = throwIO (ErrorCall $ "Data.Sajson internal error:
 toDataEither :: FromJSON a => Value -> Either String a
 toDataEither = parseEither parseJSON
 
+toData :: FromJSON a => Value -> Maybe a
+toData = parseMaybe parseJSON
+
 describeSajsonParseError :: SajsonParseError -> String
 describeSajsonParseError (SajsonParseError line col err) = "Error in sajson parser: line " ++ show line ++ " column " ++ show col ++ ": " ++ err
 
@@ -195,3 +199,9 @@ describeSajsonParseError (SajsonParseError line col err) = "Error in sajson pars
 eitherDecodeStrict :: FromJSON a => B.ByteString -> Either String a
 eitherDecodeStrict bs = unsafePerformIO $ either (Left . describeSajsonParseError) toDataEither <$> sajsonParse bs
 {-# NOINLINE eitherDecodeStrict #-}
+
+-- | Efficiently deserialize a JSON value from a strict 'B.ByteString'. If this
+-- fails, 'Nothing' is returned.
+decodeStrict :: FromJSON a => B.ByteString -> Maybe a
+decodeStrict bs = unsafePerformIO $ either (pure Nothing) toData <$> sajsonParse bs
+{-# NOINLINE decodeStrict #-}
