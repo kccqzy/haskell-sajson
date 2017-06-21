@@ -56,3 +56,10 @@ main = hspec $ do
       decoded <- sajsonParse (BL.toStrict encoded)
       decoded `shouldBe` Right v
       pure True
+
+  describe "eitherDecodeStrict" $ do
+    it "handles incorrect JSON" $
+      S.eitherDecodeStrict "[0" `shouldBe` (Left "Error in sajson parser: line 1 column 3: unexpected end of input" :: Either String [Int])
+    it "handles correct JSON but incorrect schema" $ do
+      let s = "{\"a\":42}"
+      S.eitherDecodeStrict s `shouldBe` (A.eitherDecodeStrict s :: Either String [Int])

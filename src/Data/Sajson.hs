@@ -17,11 +17,15 @@ module Data.Sajson
     -- $native
     sajsonParse
   , SajsonParseError(..)
+
+    -- * Drop-in Replacements
+    -- $replacements
+  , eitherDecodeStrict
   ) where
 
 import Control.Exception
 import Control.Monad
-import Data.Aeson.Types (Value (..))
+import Data.Aeson.Types (FromJSON (..), Value (..), parseEither)
 import Data.Bits
 import qualified Data.ByteString as B
 import qualified Data.HashMap.Strict as HM
@@ -35,6 +39,7 @@ import Foreign.C.Types
 import Foreign.Marshal.Alloc
 import Foreign.Ptr
 import Foreign.Storable
+import System.IO.Unsafe
 
 -- $introduction
 -- This library is a high-performance parser for JSON. It is an alternative
@@ -173,3 +178,20 @@ constructHaskellValue 7 payload buf = do -- TYPE_OBJECT
           val <- makeValue payload (3 + i * 3) buf
           pure $ HM.insert key val hm
 constructHaskellValue vt _ _ = throwIO (ErrorCall $ "Data.Sajson internal error: unexpected sajson type tag: " ++ show vt)
+
+-- $replacements
+-- These functions are (almost) drop-in replacements for the equivalently named
+-- functions in 'Data.Aeson', with the caveat that the outermost structure must
+-- be either an 'Object' or an 'Array'.
+
+toDataEither :: FromJSON a => Value -> Either String a
+toDataEither = parseEither parseJSON
+
+describeSajsonParseError :: SajsonParseError -> String
+describeSajsonParseError (SajsonParseError line col err) = "Error in sajson parser: line " ++ show line ++ " column " ++ show col ++ ": " ++ err
+
+-- | Efficiently deserialize a JSON value from a strict 'B.ByteString'. If this
+-- fails, 'Left' is returned with a 'String' describing the issue.
+eitherDecodeStrict :: FromJSON a => B.ByteString -> Either String a
+eitherDecodeStrict bs = unsafePerformIO $ either (Left . describeSajsonParseError) toDataEither <$> sajsonParse bs
+{-# NOINLINE eitherDecodeStrict #-}
