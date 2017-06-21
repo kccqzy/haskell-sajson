@@ -39,7 +39,6 @@ test-suite sajson-test
                      , aeson
                      , bytestring
                      , hspec
-                     , hspec-core
                      , scientific
                      , text
                      , unordered-containers

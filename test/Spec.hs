@@ -2,15 +2,14 @@
 
 module Main where
 
-import Data.Aeson
+import Data.Aeson as A
 import qualified Data.ByteString.Lazy.Char8 as BL
 import qualified Data.HashMap.Strict as HM
-import Data.Sajson
+import Data.Sajson as S
 import Data.Scientific
 import qualified Data.Text as T
 import qualified Data.Vector as V
 import Test.Hspec
-import Test.Hspec.Core.Runner
 import Test.QuickCheck
 
 newtype AcceptableValue = AcceptableValue { getAcceptableValue :: Value } deriving (Show, Eq)
@@ -25,7 +24,7 @@ instance Arbitrary AcceptableValue where
             reducedSize = scale (`div` 2)
 
 main :: IO ()
-main = hspecWith defaultConfig { configQuickCheckMaxSuccess = Just 5000 } $ do
+main = hspec $ do
   describe "sajsonParse" $ do
     it "returns proper error for truncated JSON document" $ do
       r <- sajsonParse "{\"abc\":123,\"def\":[1,2,3"
