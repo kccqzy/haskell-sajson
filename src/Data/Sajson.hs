@@ -16,6 +16,7 @@ module Data.Sajson
     -- * Native APIs
     -- $native
     sajsonParse
+  , unsafeMutableByteStringSajsonParse
   , SajsonParseError(..)
 
     -- * Drop-in Replacements
@@ -32,6 +33,7 @@ import Data.Aeson.Types (FromJSON (..), Value (..), parseEither, parseMaybe)
 import Data.Bits
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
+import qualified Data.ByteString.Unsafe as BU
 import qualified Data.HashMap.Strict as HM
 import Data.Scientific
 import qualified Data.Text as T
@@ -124,10 +126,10 @@ foreign import ccall unsafe "sajson_wrapper.h sajson_get_root"
 foreign import ccall unsafe "sajson_wrapper.h sajson_get_input"
   c_sajson_get_input :: Ptr SajsonDocument -> IO SajsonValueInputMutableView
 
--- | Parse a 'B.ByteString' into a 'Value' with the possibility of failing with
+-- | Parse a 'CStringLen' into a 'Value' with the possibility of failing with
 -- 'SajsonParseError'.
-sajsonParse :: B.ByteString -> IO (Either SajsonParseError Value)
-sajsonParse bs = B.useAsCStringLen bs $ \(ptr, size) ->
+doParse :: CStringLen -> IO (Either SajsonParseError Value)
+doParse (ptr, size) =
   allocaBytes (fromIntegral c_sajson_document_sizeof) $ \rvbuf ->
   allocaBytes (8 * size) $ \buf ->
   bracket (c_sajson_parse_single_allocation ptr (fromIntegral size) buf rvbuf) c_sajson_free_document $ \ doc -> do
@@ -141,6 +143,15 @@ sajsonParse bs = B.useAsCStringLen bs $ \(ptr, size) ->
                    <$> (fromIntegral <$> c_sajson_get_error_line doc)
                    <*> (fromIntegral <$> c_sajson_get_error_column doc)
                    <*> (c_sajson_get_error_message doc >>= peekCString))
+{-# INLINE doParse #-}
+
+-- | Parse a 'B.ByteString' into a 'Value' with the possibility of failing with
+-- 'SajsonParseError'.
+sajsonParse :: B.ByteString -> IO (Either SajsonParseError Value)
+sajsonParse bs = B.useAsCStringLen bs doParse
+
+unsafeMutableByteStringSajsonParse :: B.ByteString -> IO (Either SajsonParseError Value)
+unsafeMutableByteStringSajsonParse bs = BU.unsafeUseAsCStringLen bs doParse
 
 makeString :: SajsonValuePayload -> Int -> SajsonValueInputMutableView -> IO T.Text
 makeString payload index buf = do
@@ -148,6 +159,7 @@ makeString payload index buf = do
   end <- peekElemOff payload (1 + index)
   bs <- B.packCStringLen (buf `plusPtr` fromIntegral start, fromIntegral (end - start))
   pure (TE.decodeUtf8 bs)
+{-# INLINE makeString #-}
 
 makeValue :: SajsonValuePayload -> Int -> SajsonValueInputMutableView -> IO Value
 makeValue payload index buf = do
