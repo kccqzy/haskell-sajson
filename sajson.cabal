@@ -1,17 +1,21 @@
 name:                sajson
 version:             0.1.0.0
 synopsis:            Fast JSON parsing powered by Chad Austin's sajson library
--- description:
+description:
+    A fast JSON parsing library that is faster than aeson.
 homepage:            https://github.com/capital-match/haskell-sajson#readme
 license:             MIT
 license-file:        LICENSE
 author:              Chad Austin, Zhouyu Qian
-maintainer:          dev@capital-match.com
-copyright:           2017 Chad Austin, Capital Match Holdings Pte Ltd
-category:            Web
+maintainer:          zhouyu@capital-match.com
+copyright:           (c) 2012-2017 Chad Austin
+                     (c) 2017 Capital Match Holdings Pte Ltd
+category:            Web, Text, JSON
+stability:           experimental
 build-type:          Simple
 extra-source-files:  README.md
 cabal-version:       >=1.10
+tested-with:         GHC == 8.0.2
 
 library
   hs-source-dirs:      src
