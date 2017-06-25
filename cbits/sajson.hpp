@@ -470,21 +470,6 @@ namespace sajson {
         const char* const text;
     };
 
-    class ownership {
-    public:
-        ownership() = default;
-        ownership(const ownership&) = delete;
-        void operator=(const ownership&) = delete;
-
-        ownership(ownership&& p) = default;
-
-        ~ownership() = default;
-
-        bool is_valid() const {
-            return false;
-        }
-    };
-
     enum error {
         ERROR_SUCCESS,
         ERROR_OUT_OF_MEMORY,
@@ -512,9 +497,8 @@ namespace sajson {
 
     class document {
     public:
-        explicit document(const mutable_string_view& input, ownership&& structure, type root_type, const size_t* root)
+        explicit document(const mutable_string_view& input, type root_type, const size_t* root)
             : input(input)
-            , structure(std::move(structure))
             , root_type(root_type)
             , root(root)
             , error_line(0)
@@ -527,7 +511,6 @@ namespace sajson {
 
         explicit document(const mutable_string_view& input, size_t error_line, size_t error_column, const error error_code, int error_arg)
             : input(input)
-            , structure()
             , root_type(TYPE_NULL)
             , root(0)
             , error_line(error_line)
@@ -548,7 +531,6 @@ namespace sajson {
 
         document(document&& rhs)
             : input(rhs.input)
-            , structure(std::move(rhs.structure))
             , root_type(rhs.root_type)
             , root(rhs.root)
             , error_line(rhs.error_line)
@@ -648,7 +630,6 @@ namespace sajson {
         }
 
         mutable_string_view input;
-        ownership structure;
         const type root_type;
         const size_t* const root;
         const size_t error_line;
@@ -780,13 +761,10 @@ namespace sajson {
                 return write_cursor;
             }
 
-            ownership transfer_ownership() {
+            void transfer_ownership() {
                 structure = 0;
                 structure_end = 0;
                 write_cursor = 0;
-                {
-                    return ownership();
-                }
             }
 
         private:
@@ -839,7 +817,8 @@ namespace sajson {
         document get_document() {
             if (parse()) {
                 size_t* ast_root = allocator.get_ast_root();
-                return document(input, allocator.transfer_ownership(), root_type, ast_root);
+                allocator.transfer_ownership();
+                return document(input, root_type, ast_root);
             } else {
                 return document(input, error_line, error_column, error_code, error_arg);
             }
