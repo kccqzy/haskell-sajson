@@ -32,6 +32,7 @@ library
   c-sources:           cbits/sajson_wrapper.cpp
   cc-options:          -Wall -Werror -O3 -march=native -std=c++11 -fomit-frame-pointer
   ghc-options:         -Wall -Werror -O2
+  extra-libraries:     stdc++
 
 test-suite sajson-test
   type:                exitcode-stdio-1.0
@@ -49,7 +50,17 @@ test-suite sajson-test
                      , vector
   ghc-options:         -Wall -Werror -threaded -rtsopts
   default-language:    Haskell2010
-  extra-libraries:     stdc++
+
+executable sajson-bench
+  hs-source-dirs:      bench
+  main-is:             Bench.hs
+  build-depends:       base
+                     , sajson
+                     , criterion
+                     , aeson
+                     , bytestring
+  ghc-options:         -Wall -Werror -threaded -rtsopts
+  default-language:    Haskell2010
 
 source-repository head
   type:     git
