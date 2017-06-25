@@ -821,42 +821,29 @@ namespace sajson {
 
         /// Allocate a single worst-case AST buffer with one word per byte in
         /// the input document.
-        single_allocation()
-            : has_existing_buffer(false)
-            , existing_buffer(0)
-            , existing_buffer_size(0)
-        {}
+        single_allocation() = delete;
+
 
         /// Write the AST into an existing buffer.  Will fail with an out of
         /// memory error if the buffer is not guaranteed to be big enough for
         /// the document.
         single_allocation(size_t* existing_buffer, size_t size_in_words)
-            : has_existing_buffer(true)
-            , existing_buffer(existing_buffer)
+            : existing_buffer(existing_buffer)
             , existing_buffer_size(size_in_words)
         {}
 
         allocator make_allocator(size_t input_document_size_in_bytes, bool* succeeded) const {
-            if (has_existing_buffer) {
+            {
                 if (existing_buffer_size < input_document_size_in_bytes) {
                     *succeeded = false;
                     return allocator(nullptr);
                 }
                 *succeeded = true;
                 return allocator(existing_buffer, input_document_size_in_bytes, false);
-            } else {
-                size_t* buffer = new(std::nothrow) size_t[input_document_size_in_bytes];
-                if (!buffer) {
-                    *succeeded = false;
-                    return allocator(nullptr);
-                }
-                *succeeded = true;
-                return allocator(buffer, input_document_size_in_bytes, true);
             }
         }
 
     private:
-        bool has_existing_buffer;
         size_t* existing_buffer;
         size_t existing_buffer_size;
     };
