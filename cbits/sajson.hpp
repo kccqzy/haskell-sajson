@@ -742,37 +742,29 @@ namespace sajson {
             allocator(const allocator&) = delete;
             void operator=(const allocator&) = delete;
 
-            explicit allocator(size_t* buffer, size_t input_size, bool should_deallocate)
+            explicit allocator(size_t* buffer, size_t input_size)
                 : structure(buffer)
                 , structure_end(buffer ? buffer + input_size : 0)
                 , write_cursor(structure_end)
-                , should_deallocate(should_deallocate)
             {}
 
             explicit allocator(std::nullptr_t)
                 : structure(0)
                 , structure_end(0)
                 , write_cursor(0)
-                , should_deallocate(false)
             {}
 
             allocator(allocator&& other)
                 : structure(other.structure)
                 , structure_end(other.structure_end)
                 , write_cursor(other.write_cursor)
-                , should_deallocate(other.should_deallocate)
             {
                 other.structure = 0;
                 other.structure_end = 0;
                 other.write_cursor = 0;
-                other.should_deallocate = false;
             }
 
-            ~allocator() {
-                if (should_deallocate) {
-                    delete[] structure;
-                }
-            }
+            ~allocator() = default;
 
             stack_head get_stack_head() {
                 return stack_head(structure);
@@ -801,13 +793,10 @@ namespace sajson {
             }
 
             ownership transfer_ownership() {
-                auto p = structure;
                 structure = 0;
                 structure_end = 0;
                 write_cursor = 0;
-                if (should_deallocate) {
-                    return ownership(p);
-                } else {
+                {
                     return ownership(0);
                 }
             }
@@ -816,7 +805,6 @@ namespace sajson {
             size_t* structure;
             size_t* structure_end;
             size_t* write_cursor;
-            bool should_deallocate;
         };
 
         /// Allocate a single worst-case AST buffer with one word per byte in
@@ -839,7 +827,7 @@ namespace sajson {
                     return allocator(nullptr);
                 }
                 *succeeded = true;
-                return allocator(existing_buffer, input_document_size_in_bytes, false);
+                return allocator(existing_buffer, input_document_size_in_bytes);
             }
         }
 
