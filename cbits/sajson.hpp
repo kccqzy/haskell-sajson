@@ -472,13 +472,9 @@ namespace sajson {
 
     class ownership {
     public:
-        ownership() = delete;
+        ownership(): p(0) {}
         ownership(const ownership&) = delete;
         void operator=(const ownership&) = delete;
-
-        explicit ownership(size_t* p)
-            : p(p)
-        {}
 
         ownership(ownership&& p)
         : p(p.p) {
@@ -539,7 +535,7 @@ namespace sajson {
 
         explicit document(const mutable_string_view& input, size_t error_line, size_t error_column, const error error_code, int error_arg)
             : input(input)
-            , structure(0)
+            , structure()
             , root_type(TYPE_NULL)
             , root(0)
             , error_line(error_line)
@@ -797,7 +793,7 @@ namespace sajson {
                 structure_end = 0;
                 write_cursor = 0;
                 {
-                    return ownership(0);
+                    return ownership();
                 }
             }
 
