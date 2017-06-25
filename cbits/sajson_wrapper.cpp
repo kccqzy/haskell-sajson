@@ -1,6 +1,7 @@
 #include "sajson_wrapper.h"
 #include "sajson.hpp"
 #include <stdlib.h>
+#include <type_traits>
 
 // never instantiated, only inherits so static_cast is legal
 struct sajson_document: sajson::document {};
@@ -24,7 +25,9 @@ sajson_document* sajson_parse_single_allocation(char* str, size_t length, size_t
 }
 
 void sajson_free_document(sajson_document* doc) {
-    unwrap(doc)->~document();
+    static_assert(std::is_trivially_destructible<sajson::document>::value, "sajson::document needs to have a trivial destructor because we do not call it; we just deallocate its storage");
+    // According to the C++ Standard (section 3.8), you can end an object's lifetime by deallocating or reusing its storage. There's no need to call a destructor that does nothing. In this case we statically verify that it is trivially destructible.
+    // unwrap(doc)->~document();
 }
 
 int sajson_has_error(sajson_document* doc) {

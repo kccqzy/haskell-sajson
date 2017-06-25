@@ -102,9 +102,6 @@ foreign import ccall unsafe "sajson_wrapper.h sajson_document_sizeof"
 foreign import ccall unsafe "sajson_wrapper.h sajson_parse_single_allocation"
   c_sajson_parse_single_allocation :: Ptr CChar -> CSize -> Ptr CSize -> Ptr CChar -> IO (Ptr SajsonDocument)
 
-foreign import ccall unsafe "sajson_wrapper.h sajson_free_document"
-  c_sajson_free_document :: Ptr SajsonDocument -> IO ()
-
 foreign import ccall unsafe "sajson_wrapper.h sajson_has_error"
   c_sajson_has_error :: Ptr SajsonDocument -> IO CInt
 
@@ -131,8 +128,8 @@ foreign import ccall unsafe "sajson_wrapper.h sajson_get_input"
 doParse :: CStringLen -> IO (Either SajsonParseError Value)
 doParse (ptr, size) =
   allocaBytes (fromIntegral c_sajson_document_sizeof) $ \rvbuf ->
-  allocaBytes (8 * size) $ \buf ->
-  bracket (c_sajson_parse_single_allocation ptr (fromIntegral size) buf rvbuf) c_sajson_free_document $ \ doc -> do
+  allocaBytes (8 * size) $ \buf -> do
+  doc <- c_sajson_parse_single_allocation ptr (fromIntegral size) buf rvbuf
   hasError <- c_sajson_has_error doc
   case hasError of
     0 -> Right <$> join (constructHaskellValue
