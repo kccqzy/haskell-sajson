@@ -472,25 +472,17 @@ namespace sajson {
 
     class ownership {
     public:
-        ownership(): p(0) {}
+        ownership() = default;
         ownership(const ownership&) = delete;
         void operator=(const ownership&) = delete;
 
-        ownership(ownership&& p)
-        : p(p.p) {
-            p.p = 0;
-        }
+        ownership(ownership&& p) = default;
 
-        ~ownership() {
-            delete[] p;
-        }
+        ~ownership() = default;
 
         bool is_valid() const {
-            return !!p;
+            return false;
         }
-
-    private:
-        size_t* p;
     };
 
     enum error {
