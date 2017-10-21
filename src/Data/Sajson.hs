@@ -2,7 +2,7 @@
 
 -- |
 -- Module:      Data.Sajson
--- Copyright:   (c) 2017 Capital Match Holdings Pte Ltd
+-- Copyright:   (c) 2017 Zhouyu Qian
 --              (c) 2012-2017 Chad Austin
 -- License:     MIT
 -- Maintainer:  Zhouyu Qian
