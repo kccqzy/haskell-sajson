@@ -1,5 +1,7 @@
 # sajson
 
+[![Build Status](https://travis-ci.com/kccqzy/haskell-sajson.svg?branch=master)](https://travis-ci.com/kccqzy/haskell-sajson)
+
 This is a Haskell package that is a thin wrapper over the wonderful
 [sajson](https://github.com/chadaustin/sajson) library written by Chad Austin.
 It provides a high performance JSON parser written in C++11. After parsing, a

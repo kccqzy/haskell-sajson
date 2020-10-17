@@ -1,39 +1,31 @@
-# Adapted from https://raw.githubusercontent.com/commercialhaskell/stack/master/doc/travis-simple.yml
-
-# Use new container infrastructure to enable caching
-sudo: false
-
-# Use Ubuntu Trusty, which has g++4.8 which supports C++11
-dist: trusty
-
-# No emails
-notifications:
-  email: false
-
-# Do not choose a language; we provide our own build tools.
-language: generic
-
-# Caching so the next build will be fast too.
+# https://docs.haskellstack.org/en/stable/travis_ci/
+# https://nixos.wiki/wiki/Nix_on_Travis
+language: nix
 cache:
   directories:
+  - $HOME/nix.store
   - $HOME/.stack
+  - $TRAVIS_BUILD_DIR/.stack-work
 
-# Ensure necessary system libraries are present
-addons:
-  apt:
-    packages:
-      - libgmp-dev
+os: linux
+dist: bionic
 
 before_install:
-# Download and unpack the stack executable
-- mkdir -p ~/.local/bin
-- export PATH=$HOME/.local/bin:$PATH
-- travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+  - sudo mkdir -p /etc/nix
+  - echo "substituters = https://cache.nixos.org/ file://$HOME/nix.store" | sudo tee -a /etc/nix/nix.conf > /dev/null
+  - echo 'require-sigs = false' | sudo tee -a /etc/nix/nix.conf > /dev/null
+  - nix-env -iA nixpkgs.stack
 
-install:
-# Build dependencies
-- stack --no-terminal --install-ghc test --only-dependencies
+before_cache:
+  - mkdir -p $HOME/nix.store
+  - nix copy --to file://$HOME/nix.store -f default.nix buildInputs
+
+before_script:
+  - sudo mkdir -p /etc/nix && echo 'sandbox = true' | sudo tee /etc/nix/nix.conf
 
 script:
-# Build the package, its tests, and its docs and run the tests
-- stack --no-terminal test --haddock --no-haddock-deps
+  - stack --version
+  - travis_retry eval $"stack build --dependencies-only"
+  - stack build
+  - travis_retry eval $"stack test --no-run-tests"
+  - stack --no-terminal test --haddock --no-haddock-deps
